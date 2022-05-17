@@ -16,10 +16,13 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
+from graphene_django.views import GraphQLView
+
 from citizen import settings
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+from django.views.decorators.csrf import csrf_exempt
 
 
 schema_view = get_schema_view(
@@ -36,15 +39,12 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    # TODO когда это всё будет в продакшене сделать csrf
+    path('api/v1/graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path('signin-drf/', include('rest_framework.urls')),
-    path('admin/', admin.site.urls),
-    path('api/v1/address/', include('address.urls')),
-    path('api/v1/users/', include('users.urls')),
-    path('api/v1/problems/', include('problem.urls')),
-    path('api/v1/mo/', include('municipality.urls'))
+    # path('admin/', admin.site.urls),
+    # path('api/v1/users/', include('users.urls')),
+
 ]
 
 if settings.DEBUG:

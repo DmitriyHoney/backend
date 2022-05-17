@@ -1,9 +1,14 @@
+from dateutil import parser
 from django.http import Http404
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
+from django.utils.timezone import datetime
 from .models import User
 from django.contrib.auth.models import Group
 from .serializers import UserSerializer, UserDetailSerializer, GroupSerializer, ChangePasswordSerializer, ChangeEmailSerializer, CustomTokenObtainPairSerializer
@@ -14,6 +19,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = ()
 
+
 class UserGroups(generics.ListCreateAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
@@ -22,11 +28,18 @@ class UserGroups(generics.ListCreateAPIView):
 
 class UserList(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['lastname', 'email', 'phone', 'id']
+    filterset_fields = ['is_archive', 'gender']
+    ordering_fields = '__all__'
 
     def get_queryset(self):
         queryset = User.objects.all()
-        is_archive = self.request.query_params.get('is_archive', False)
-        return queryset.filter(is_archive=True) if is_archive else queryset.filter(is_archive=False)
+        reg_start_date = self.request.query_params.get('reg_start_date', None)
+        reg_end_date = self.request.query_params.get('reg_end_date', None)
+        if reg_start_date and reg_end_date:
+            queryset = queryset.filter(register_date__range=[reg_start_date, reg_end_date])
+        return queryset
 
     def get_serializer_class(self):
         method = self.request.method
@@ -42,18 +55,20 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         pk = kwargs.get('pk', None)
-        # TODO: сделать собственный класс с обработчиками ответов
         not_found_response = Response({"msg": "object not found"}, status=status.HTTP_404_NOT_FOUND)
         success_delete_response = Response(status=status.HTTP_204_NO_CONTENT)
         if not pk:
             return not_found_response
         try:
+
             user = User.objects.get(pk=pk)
             user.is_archive = True
             user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = UserDetailSerializer(instance=user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Http404:
             return success_delete_response
+
 
 class UserChangePasswordView(generics.CreateAPIView):
     model = User

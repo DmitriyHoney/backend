@@ -5,3 +5,8 @@ django-phonenumber-field~=6.1.0
 drf-yasg
 djangorestframework-simplejwt
 psycopg2
+django-cors-headers
+django-phonenumber-field[phonenumbers]
+django-filter
+python-dateutil
+graphene-django

@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+import django
+from django.utils.encoding import force_str
+django.utils.encoding.force_text = force_str
 
 SECRET_KEY = 'asdq3wda2134tu32ygrghu2ghbrgwegrf8webfhgwe7fgwe'
 
@@ -60,7 +63,9 @@ SECRET_KEY = 'django-insecure-u5e1%ab=16=yg&_yc@7wkf4^^qfqdx&)&iyb8hsha04noun)dy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '*'
+]
 
 
 CORS_ALLOWED_ORIGINS = [
@@ -83,20 +88,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    'graphene_django',
     'drf_yasg',
     'corsheaders',
     'rest_framework_simplejwt',
     'phonenumber_field',
     'rest_framework',
-    'users.apps.UsersConfig',
-    'problem.apps.ProblemConfig',
-    'municipality',
-    'address'
-
+    'users.apps.UsersConfig'
 ]
+
+GRAPHENE = {
+    'SCHEMA': 'citizen.schema.schema'
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'citizen.pagination.CustomListPagination',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'PAGE_SIZE': 2,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',

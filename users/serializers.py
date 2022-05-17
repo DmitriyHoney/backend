@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from municipality.serializers import MunicipalitySerializer
 from .models import User
 from django.contrib.auth.models import Group
 
@@ -25,7 +24,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
-
 class GroupSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
 
@@ -40,18 +38,22 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
+
         fields = ('id', 'name', 'title', )
 
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     short_name = serializers.SerializerMethodField()
-    # groups = GroupSerializer(many=True, read_only=True)
-    # mo = MunicipalitySerializer()
+    groups = serializers.SerializerMethodField()
+
+    def get_groups(self, instance):
+        groups = instance.groups.all().order_by('pk')
+        return GroupSerializer(instance=groups, many=True, read_only=True).data
 
     class Meta:
         model = User
-        exclude = ['user_permissions', 'last_login', 'password', 'register_date']
+        exclude = ['user_permissions', 'last_login', 'password']
 
     def get_full_name(self, obj):
         return obj.get_full_name()
@@ -77,10 +79,12 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ['user_permissions', 'last_login']
+        fields = '__all__'
 
     def create(self, validated_data):
-        groups = validated_data.pop('groups')
+        groups = None
+        if validated_data.get('groups'):
+            groups = validated_data.pop('groups')
         password = validated_data.get('password', None)
         user = User(**validated_data)
         user.set_password(password)
@@ -93,11 +97,12 @@ class UserDetailSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        groups = validated_data.pop('groups')
+        groups = validated_data.get('groups', None)
+        if groups:
+            groups = validated_data.pop('groups')
+            instance.groups.set(groups)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        if groups:
-            instance.groups.set(groups)
         instance.save()
         instance.create_avatar_thumb()
         return instance
