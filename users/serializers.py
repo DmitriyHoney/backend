@@ -1,3 +1,4 @@
+from ast import Pass
 from dataclasses import fields
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -42,41 +43,7 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'title', )
 
 
-class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField()
-    short_name = serializers.SerializerMethodField()
-    groups = serializers.SerializerMethodField()
-
-    def get_groups(self, instance):
-        groups = instance.groups.all().order_by('pk')
-        return GroupSerializer(instance=groups, many=True, read_only=True).data
-
-    class Meta:
-        model = User
-        exclude = ['user_permissions', 'last_login', 'password']
-
-    def get_full_name(self, obj):
-        return obj.get_full_name()
-
-    def get_short_name(self, obj):
-        return obj.get_short_name()
-
-
-class UserDetailSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, label="Пароль")
-
-    def get_fields(self, *args, **kwargs):
-        fields = super(UserDetailSerializer, self).get_fields(*args, **kwargs)
-        request = self.context.get('request', None)
-        fields['avatar_small'].read_only = True
-        if request and request.method in ['PUT', 'PATCH']:
-            fields['password'].read_only = True
-            fields['email'].read_only = True
-            if not request.user.is_superuser:
-                fields['groups'].read_only = True
-
-        return fields
-
+class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
@@ -89,7 +56,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
-        user.create_avatar_thumb()
 
         if groups:
             user.groups.set(groups)
@@ -104,11 +70,54 @@ class UserDetailSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        instance.create_avatar_thumb()
+        # instance.create_avatar_thumb()
         return instance
 
-    def to_representation(self, instance):
-        return UserSerializer(instance).data
+
+# class UserDetailSerializer(serializers.ModelSerializer):
+#     password = serializers.CharField(write_only=True, label="Пароль")
+
+#     def get_fields(self, *args, **kwargs):
+#         fields = super(UserDetailSerializer, self).get_fields(*args, **kwargs)
+#         request = self.context.get('request', None)
+#         fields['avatar_small'].read_only = True
+#         if request and request.method in ['PUT', 'PATCH']:
+#             fields['password'].read_only = True
+#             fields['email'].read_only = True
+#             if not request.user.is_superuser:
+#                 fields['groups'].read_only = True
+
+#         return fields
+
+#     class Meta:
+#         model = User
+#         fields = '__all__'
+
+#     def create(self, validated_data):
+#         groups = None
+#         if validated_data.get('groups'):
+#             groups = validated_data.pop('groups')
+#         password = validated_data.get('password', None)
+#         user = User(**validated_data)
+#         user.set_password(password)
+#         user.save()
+#         user.create_avatar_thumb()
+
+#         if groups:
+#             user.groups.set(groups)
+
+#         return user
+
+#     def update(self, instance, validated_data):
+#         groups = validated_data.get('groups', None)
+#         if groups:
+#             groups = validated_data.pop('groups')
+#             instance.groups.set(groups)
+#         for attr, value in validated_data.items():
+#             setattr(instance, attr, value)
+#         instance.save()
+#         instance.create_avatar_thumb()
+#         return instance
 
 
 class ChangePasswordSerializer(serializers.Serializer):

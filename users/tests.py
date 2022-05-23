@@ -9,7 +9,7 @@ class UsersManagersTests(TestCase):
         user = User.objects.create_user(email='admin@mail.ru', phone='+79964456754', password='foo')
         self.assertEqual(user.email, 'admin@mail.ru')
         self.assertEqual(user.phone, '+79964456754')
-        self.assertEqual(user.is_active)
+        self.assertTrue(user.is_active)
         try:
             # проверяем чтобы не было в модели поля username
             self.assertIsNone(user.username)
@@ -22,9 +22,9 @@ class UsersManagersTests(TestCase):
         with self.assertRaises(TypeError):
             User.objects.create_user(phone='')
         with self.assertRaises(ValueError):
-            User.objects.create_user(email='', password="foo")
+            User.objects.create_user(email='', phone='', password="foo")
         with self.assertRaises(ValueError):
-            User.objects.create_user(phone='', password="foo")
+            User.objects.create_user(email='', phone='', password="foo")
 
     def test_create_superuser(self):
         User = get_user_model()

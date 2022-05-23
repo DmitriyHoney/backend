@@ -3,7 +3,13 @@ from graphene import Scalar
 from graphene_django import DjangoObjectType
 from graphene_django.rest_framework.mutation import SerializerMutation
 from .models import User
-from .serializers import UserDetailSerializer
+from .serializers import UserCreateSerializer
+
+
+class ObjectField(Scalar): # to serialize error message from serializer
+    @staticmethod
+    def serialize(dt):
+        return dt 
 
 
 class UserType(DjangoObjectType):
@@ -14,39 +20,58 @@ class UserType(DjangoObjectType):
 
 
 class CreateUser(graphene.Mutation):
-    """
-    This is the main class where user object is created.
-    This class must implement a mutate method.
-    """
+    message = ObjectField()
+    user = graphene.Field(UserType)
+
     class Arguments:
         email = graphene.String()
-        firstname = graphene.String()
-        lastname = graphene.String()
         password = graphene.String()
         phone = graphene.String()
 
+    @classmethod
+    def mutate(cls, root, info, **kwargs):
+        serializer = UserCreateSerializer(data=kwargs)
+        user = None
+        msg = None
+        if serializer.is_valid():
+            user = serializer.save()
+        else:
+            msg=serializer.errors
+        return cls(user=user,message=msg)
+
+
+class UpdateUser(graphene.Mutation):
+    message = ObjectField()
     user = graphene.Field(UserType)
 
+    class Arguments:
+        id = graphene.ID(required=True)
+        is_active = graphene.Boolean()
+        # groups = graphene.List(graphene.ID())
+
     @classmethod
-    def mutate(cls, root, info, **user_data):
-        user = User(
-            firstname=user_data.get('firstname'),
-            email=user_data.get('email'),
-            lastname=user_data.get('lastname'),
-            phone=user_data.get('phone')
-        )
-        user.set_password(user_data.get('password'))  # This will hash the password
+    def mutate(cls, root, info, id, **kwargs):
+        user = User.objects.get(id=id)
+        serializer = UserCreateSerializer(user, data=kwargs, partial=True)
+        user = None
+        msg = None
+        if serializer.is_valid():
+            user = serializer.save()
+        else:
+            msg=serializer.errors
+        return cls(user=user,message=msg)
+
+
+class ArchiveUser(graphene.Mutation):
+    message = ObjectField()
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        id=graphene.ID(required=True)
+
+    @classmethod
+    def mutate(cls,root,info,id,**kwargs):
+        user = User.objects.get(id=id)
+        user.is_active = False
         user.save()
-        return CreateUser(user=user)
-
-
-class ObjectField(Scalar): # to serialize error message from serializer
-    @staticmethod
-    def serialize(dt):
-        return dt
-
-
-class CreateUserDRF(SerializerMutation):
-    class Meta:
-        serializer_class = UserDetailSerializer
-        model_class = User
+        return cls(user=user, message='success')

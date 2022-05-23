@@ -3,7 +3,7 @@ djangorestframework~=3.13.1
 Pillow~=9.0.1
 django-phonenumber-field~=6.1.0
 drf-yasg
-djangorestframework-simplejwt
+djangorestframework-simplejwt #todo delete
 # psycopg2
 psycopg2-binary
 django-cors-headers
@@ -12,3 +12,4 @@ django-filter
 python-dateutil
 graphene-django
 django_phonenumbers
+django-graphql-jwt
