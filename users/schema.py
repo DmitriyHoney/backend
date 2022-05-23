@@ -1,7 +1,11 @@
 import graphene
+from django.db import transaction
 from graphene import Scalar
 from graphene_django import DjangoObjectType
 from graphene_django.rest_framework.mutation import SerializerMutation
+import graphql_jwt
+from graphql_jwt.decorators import login_required, superuser_required, user_passes_test, permission_required
+
 from .models import User
 from .serializers import UserCreateSerializer
 
@@ -36,7 +40,7 @@ class CreateUser(graphene.Mutation):
         if serializer.is_valid():
             user = serializer.save()
         else:
-            msg=serializer.errors
+            msg = serializer.errors
         return cls(user=user,message=msg)
 
 
@@ -47,6 +51,7 @@ class UpdateUser(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
         is_active = graphene.Boolean()
+        is_superuser = graphene.Boolean()
         # groups = graphene.List(graphene.ID())
 
     @classmethod
@@ -67,7 +72,7 @@ class ArchiveUser(graphene.Mutation):
     user = graphene.Field(UserType)
 
     class Arguments:
-        id=graphene.ID(required=True)
+        id = graphene.ID(required=True)
 
     @classmethod
     def mutate(cls,root,info,id,**kwargs):
@@ -75,3 +80,12 @@ class ArchiveUser(graphene.Mutation):
         user.is_active = False
         user.save()
         return cls(user=user, message='success')
+
+
+class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
+    user = graphene.Field(UserType)
+
+    @classmethod
+    def resolve(cls, root, info, **kwargs):
+        print(info.context.user)
+        return cls(user=info.context.user)

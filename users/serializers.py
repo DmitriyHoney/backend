@@ -1,28 +1,8 @@
-from ast import Pass
-from dataclasses import fields
 from rest_framework import serializers
-from rest_framework.response import Response
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
 from django.contrib.auth.models import Group
-
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Customizes JWT default Serializer to add more information about user"""
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        refresh = self.get_token(self.user)
-
-        data["user"] = UserSerializer(self.user).data
-        data["token"] = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token)
-        }
-        del data["refresh"]
-        del data["access"]
-        return data
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -118,17 +98,5 @@ class UserCreateSerializer(serializers.ModelSerializer):
 #         instance.save()
 #         instance.create_avatar_thumb()
 #         return instance
-
-
-class ChangePasswordSerializer(serializers.Serializer):
-    model = User
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
-
-
-class ChangeEmailSerializer(serializers.Serializer):
-    model = User
-    email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
-    password = serializers.CharField(required=True)
 
 
