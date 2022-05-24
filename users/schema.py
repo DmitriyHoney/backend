@@ -44,6 +44,7 @@ class CreateUser(graphene.Mutation):
         return cls(user=user,message=msg)
 
 
+# only is_authenticated, admin || moder
 class UpdateUser(graphene.Mutation):
     message = ObjectField()
     user = graphene.Field(UserType)
@@ -67,6 +68,10 @@ class UpdateUser(graphene.Mutation):
         return cls(user=user,message=msg)
 
 
+#TODO create UpdateCurrentUser by JWT
+ 
+
+# only is_authenticated and roles admin or moder
 class ArchiveUser(graphene.Mutation):
     message = ObjectField()
     user = graphene.Field(UserType)
@@ -103,6 +108,9 @@ class ChangePassword(graphene.Mutation):
             return cls(user=user, message='success')
         else:
             return cls(user=None, message=serializer.errors)
+
+
+#TODO create ForgetPassword with email callback
 
 
 class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):

@@ -1,3 +1,4 @@
+from importlib.metadata import requires
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.contrib.auth.models import PermissionsMixin
@@ -11,7 +12,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(verbose_name="Email", unique=True)
-    phone = PhoneNumberField(verbose_name="Телефон", unique=True)
+    phone = PhoneNumberField(verbose_name="Телефон", unique=True, null=True)
     register_date = models.DateTimeField(verbose_name="Дата регистрации", auto_now_add=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -21,7 +22,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Пользователи'
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone']
 
     objects = UserManager()  
 
