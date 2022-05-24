@@ -64,8 +64,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'phonenumber_field',
     'rest_framework',
-    'users.apps.UsersConfig'
+    'django_rest_passwordreset',
+    'users.apps.UsersConfig',
 ]
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'eur719@gmail.com'
+EMAIL_HOST_PASSWORD = 'qanelucxebwkblkx'
 
 GRAPHENE = {
     'SCHEMA': 'citizen.schema.schema',

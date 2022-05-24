@@ -42,9 +42,7 @@ urlpatterns = [
     # TODO когда это всё будет в продакшене сделать csrf
     path('api/v1/graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path('signin-drf/', include('rest_framework.urls')),
-    # path('admin/', admin.site.urls),
-    # path('api/v1/users/', include('users.urls')),
-
+    path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
 
 if settings.DEBUG:

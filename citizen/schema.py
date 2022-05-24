@@ -1,7 +1,7 @@
 import graphene
 import graphql_jwt
 from users.models import User
-from users.schema import UpdateUser, UserType, CreateUser, ArchiveUser, ObtainJSONWebToken, ChangePassword
+from users.schema import UpdateUser, UserType, CreateUser, ArchiveUser, ObtainJSONWebToken, ChangePassword, UpdateCurrentUser
 from graphql_jwt.decorators import login_required
 
 
@@ -22,6 +22,7 @@ class Query(graphene.ObjectType):
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
+    update_current_user = UpdateCurrentUser.Field()
     archive_user = ArchiveUser.Field()
     signin = ObtainJSONWebToken.Field()
     change_password = ChangePassword.Field()

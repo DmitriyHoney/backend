@@ -13,3 +13,4 @@ python-dateutil
 graphene-django
 django_phonenumbers
 django-graphql-jwt
+django-rest-passwordreset

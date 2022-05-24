@@ -1,4 +1,5 @@
 import graphene
+from django.contrib.auth.models import Group
 from django.db import transaction
 from graphene import Scalar
 from graphene_django import DjangoObjectType
@@ -23,6 +24,16 @@ class UserType(DjangoObjectType):
         exclude = ['password']
 
 
+class UserGroupsType(DjangoObjectType):
+    class Meta:
+        model = Group
+
+
+class UserGenderEnum(graphene.Enum):
+    MALE = User.MALE
+    FEMALE = User.FEMALE
+
+
 class CreateUser(graphene.Mutation):
     message = ObjectField()
     user = graphene.Field(UserType)
@@ -44,6 +55,13 @@ class CreateUser(graphene.Mutation):
         return cls(user=user,message=msg)
 
 
+class CreateUserGroup(graphene.Mutation):
+    message = ObjectField()
+    group = graphene.Field(UserGroupsType)
+
+    class Arguments:
+        name = graphene.String()
+
 # only is_authenticated, admin || moder
 class UpdateUser(graphene.Mutation):
     message = ObjectField()
@@ -52,20 +70,32 @@ class UpdateUser(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
         is_active = graphene.Boolean()
-        is_superuser = graphene.Boolean()
-        # groups = graphene.List(graphene.ID())
+        firstname = graphene.String()
+        lastname = graphene.String()
+        middlename = graphene.String()
+        gender = UserGenderEnum()
+        groups = graphene.List(graphene.ID)
 
     @classmethod
-    def mutate(cls, root, info, id, **kwargs):
-        user = User.objects.get(id=id)
+    def mutate(cls, root, info, id=None, **kwargs):
+        user = User.objects.get(id=id) if id else info.context.user
+        avatar = info.context.FILES.get('avatar', None)
         serializer = UserSerializer(user, data=kwargs, partial=True)
         user = None
         msg = None
         if serializer.is_valid():
             user = serializer.save()
+            if avatar:
+                user.create_avatar_thumb(avatar)
         else:
-            msg=serializer.errors
-        return cls(user=user,message=msg)
+            msg = serializer.errors
+        return cls(user=user, message=msg)
+
+
+class UpdateCurrentUser(UpdateUser):
+    class Arguments:
+        is_active = graphene.Boolean()
+        is_superuser = graphene.Boolean()
 
 
 #TODO create UpdateCurrentUser by JWT
