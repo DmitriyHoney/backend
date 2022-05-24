@@ -1,3 +1,4 @@
+from pyexpat import model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -23,7 +24,7 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'title', )
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
@@ -53,6 +54,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         # instance.create_avatar_thumb()
         return instance
 
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
 
 # class UserDetailSerializer(serializers.ModelSerializer):
 #     password = serializers.CharField(write_only=True, label="Пароль")

@@ -7,7 +7,7 @@ import graphql_jwt
 from graphql_jwt.decorators import login_required, superuser_required, user_passes_test, permission_required
 
 from .models import User
-from .serializers import UserCreateSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer
 
 
 class ObjectField(Scalar): # to serialize error message from serializer
@@ -34,7 +34,7 @@ class CreateUser(graphene.Mutation):
 
     @classmethod
     def mutate(cls, root, info, **kwargs):
-        serializer = UserCreateSerializer(data=kwargs)
+        serializer = UserSerializer(data=kwargs)
         user = None
         msg = None
         if serializer.is_valid():
@@ -57,7 +57,7 @@ class UpdateUser(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, id, **kwargs):
         user = User.objects.get(id=id)
-        serializer = UserCreateSerializer(user, data=kwargs, partial=True)
+        serializer = UserSerializer(user, data=kwargs, partial=True)
         user = None
         msg = None
         if serializer.is_valid():
@@ -75,11 +75,34 @@ class ArchiveUser(graphene.Mutation):
         id = graphene.ID(required=True)
 
     @classmethod
-    def mutate(cls,root,info,id,**kwargs):
+    def mutate(cls, root, info, **kwargs):
         user = User.objects.get(id=id)
         user.is_active = False
         user.save()
         return cls(user=user, message='success')
+
+
+# only is_authenticated
+class ChangePassword(graphene.Mutation):
+    message = ObjectField()
+    user = graphene.Field(UserType)
+
+    class Arguments:
+        old_password = graphene.String(required=True)
+        new_password = graphene.String(required=True)
+
+    @classmethod
+    def mutate(cls, root, info, **kwargs):
+        user = info.context.user
+        serializer = ChangePasswordSerializer(data=kwargs)
+        if serializer.is_valid():
+            if not user.check_password(serializer.data.get("old_password")):
+                return cls(user=None, message='error') 
+            user.set_password(serializer.data.get("new_password"))
+            user.save()
+            return cls(user=user, message='success')
+        else:
+            return cls(user=None, message=serializer.errors)
 
 
 class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
@@ -87,5 +110,4 @@ class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
     @classmethod
     def resolve(cls, root, info, **kwargs):
-        print(info.context.user)
         return cls(user=info.context.user)
