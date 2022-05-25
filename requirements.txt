@@ -4,8 +4,8 @@ Pillow~=9.0.1
 django-phonenumber-field~=6.1.0
 drf-yasg
 djangorestframework-simplejwt #todo delete
-psycopg2
-# psycopg2-binary
+# psycopg2
+psycopg2-binary
 django-cors-headers
 django-phonenumber-field[phonenumbers]
 django-filter

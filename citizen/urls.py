@@ -39,9 +39,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('signin-drf/', include('rest_framework.urls')),
     # TODO когда это всё будет в продакшене сделать csrf
     path('api/v1/graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
-    path('signin-drf/', include('rest_framework.urls')),
     path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
 
